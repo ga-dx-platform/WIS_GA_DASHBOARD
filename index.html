@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GA Operations Review — HO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F5F9; --surface:#FFFFFF; --ink:#0F172A; --ink-2:#475569; --ink-3:#6B7789;
+  --rule:#E2E7EE; --rule-2:#EDF1F6;
+  --navy:#1E3A8A; --blue:#2563EB; --blue-2:#93B4F0; --amber:#D97706; --ochre:#C2680E;
+  --ok:#059669; --warn:#D97706; --alert:#DC2626;
+  --ok-t:#E7F5EF; --warn-t:#FBEFDD; --alert-t:#FCE9E9; --navy-t:#E9EEFB;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink-2);
+  font-weight:400;line-height:1.5;-webkit-font-smoothing:antialiased;padding:0 22px 80px;font-size:14.5px}
+.sheet{max-width:1180px;margin:0 auto}
+.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.eb{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+
+/* MASTHEAD */
+.mast{padding:38px 0 20px;border-bottom:2.5px solid var(--ink)}
+.mast .kick{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.mast .kick .eb{color:var(--navy)}
+.mast h1{color:var(--ink);font-weight:600;font-size:clamp(26px,4vw,40px);letter-spacing:-.015em;
+  line-height:1.04;margin:14px 0 4px}
+.mast .sub{font-size:14px;color:var(--ink-3);font-weight:400}
+.mast .meta{display:flex;gap:34px;margin-top:20px;flex-wrap:wrap;align-items:flex-end}
+.mast .meta .item .eb{margin-bottom:4px}
+.mast .meta .item .v{color:var(--ink);font-size:17px;font-weight:600}
+.mast .period{margin-left:auto;text-align:right}
+.mast .period .p{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:30px;font-weight:600;letter-spacing:.01em;line-height:1}
+.mast .period .fy{font-size:12px;color:var(--ink-3);margin-top:3px;font-weight:500}
+.status{margin-top:18px;padding:11px 15px;background:var(--surface);border:1px solid var(--rule);
+  display:flex;gap:11px;align-items:baseline;font-size:13px}
+.status b{color:var(--ink);font-weight:600}
+.status .tg{font-weight:600;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  padding:3px 8px;color:#fff;flex:none}
+
+/* READOUTS */
+.ro-grid{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid var(--rule);border-bottom:none;
+  margin-top:24px;background:var(--surface)}
+.ro{padding:14px 14px 13px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule-2)}
+.ro:nth-child(6n){border-right:none}
+.ro .eb{display:block;margin-bottom:9px;min-height:24px}
+.ro .v{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:28px;font-weight:600;line-height:1;letter-spacing:-.01em}
+.ro .v s{text-decoration:none;font-size:14px;color:var(--ink-3);font-weight:500}
+.ro .d{margin-top:7px;font-size:11.5px;color:var(--ink-3);display:flex;align-items:center;gap:5px}
+.up{color:var(--ok)}.dn{color:var(--alert)}.fl{color:var(--ink-3)}
+.spk{margin-top:9px}
+
+/* SECTION + spine */
+.sec{display:grid;grid-template-columns:56px 1fr;margin-top:40px}
+.spine{position:relative;padding-right:18px}
+.spine .no{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--navy);letter-spacing:-.02em;line-height:1;position:sticky;top:14px}
+.spine::after{content:"";position:absolute;left:0;top:5px;bottom:-40px;width:1px;background:var(--rule)}
+.sec:last-of-type .spine::after{display:none}
+.body{min-width:0}
+.sec-hd{border-top:2px solid var(--ink);padding-top:11px;margin-bottom:18px;display:flex;
+  justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
+.sec-hd h2{color:var(--ink);font-size:21px;font-weight:600;letter-spacing:-.01em}
+.sec-hd .rt{font-size:12px;color:var(--ink-3);text-align:right}
+.mock{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--warn);
+  border:1px solid var(--warn);padding:2px 7px;margin-left:8px;vertical-align:middle}
+
+.panels{display:grid;gap:20px 26px}
+.p2{grid-template-columns:1fr 1fr}.p3{grid-template-columns:1fr 1fr 1fr}
+.p21{grid-template-columns:1.5fr 1fr}.p12{grid-template-columns:1fr 1.6fr}
+.p31{grid-template-columns:1.3fr 1.3fr 1fr}
+.panel{min-width:0}
+.panel>.eb{display:block;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--rule);color:var(--ink-2)}
+.panel>.eb s,.eb s{text-decoration:none;color:var(--ink-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px}
+
+.stat{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:33px;font-weight:600;line-height:1;letter-spacing:-.01em}
+.stat s{text-decoration:none;font-size:14px;color:var(--ink-3);font-weight:500}
+.cap{font-size:11.5px;color:var(--ink-3);margin-top:6px}
+
+/* meter */
+.meter .tk{height:6px;background:var(--rule-2);position:relative;overflow:hidden}
+.meter .tk i{position:absolute;left:0;top:0;height:100%;width:0;transition:width 1.1s cubic-bezier(.19,1,.22,1)}
+.meter .notch{position:absolute;top:-2px;bottom:-2px;width:1.5px;background:var(--ink)}
+.meter .sc{display:flex;justify-content:space-between;margin-top:5px;font-size:9.5px;color:var(--ink-3)}
+
+/* ratio */
+.ratio{height:24px;display:flex;border:1px solid var(--rule);overflow:hidden;margin-bottom:8px}
+.ratio i{height:100%;display:flex;align-items:center;padding:0 8px;color:#fff;font-size:11px;font-weight:600;
+  white-space:nowrap;min-width:0;transition:width 1s cubic-bezier(.19,1,.22,1)}
+.rlg{display:flex;gap:14px;font-size:11.5px;color:var(--ink-2)}
+.rlg span{display:flex;align-items:center;gap:6px}.sw{width:9px;height:9px;flex:none}
+
+/* hbars */
+.hb{margin-bottom:9px}.hb:last-child{margin-bottom:0}
+.hb .l{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.hb .l b{color:var(--ink);font-weight:600}
+.hb .t{height:7px;background:var(--rule-2)}.hb .t i{display:block;height:100%;width:0;background:var(--blue);transition:width .9s cubic-bezier(.19,1,.22,1)}
+
+/* aging */
+.aging{display:flex;border:1px solid var(--rule)}
+.aging .b{flex:1;padding:11px;text-align:center;border-right:1px solid var(--rule-2)}
+.aging .b:last-child{border-right:none}
+.aging .b .n{font-size:22px;font-weight:600;color:var(--ink);line-height:1}
+.aging .b.risk .n{color:var(--alert)}.aging .b .k{font-size:10px;color:var(--ink-3);margin-top:5px}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);padding:0 9px 8px;border-bottom:1px solid var(--rule)}
+th.r,td.r{text-align:right}
+tbody td{padding:8px 9px;border-bottom:1px solid var(--rule-2);color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:none}
+td.k{color:var(--ink);font-weight:500}td.n{font-weight:600;color:var(--ink)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;padding:2px 8px}
+.pill.ok{background:var(--ok-t);color:#047857}.pill.warn{background:var(--warn-t);color:#B45309}
+.pill.alert{background:var(--alert-t);color:#B91C1C}.pill.mut{background:var(--rule-2);color:var(--ink-3)}
+
+/* legend + donut */
+.dwrap{display:flex;align-items:center;gap:18px}
+.legend{font-size:12px;display:flex;flex-direction:column;gap:7px}
+.legend div{display:flex;align-items:center;gap:8px;color:var(--ink-2)}.legend b{color:var(--ink);margin-left:auto;font-weight:600}
+
+/* findings */
+.find{list-style:none;display:flex;flex-direction:column}
+.find li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--rule-2);font-size:12.5px;color:var(--ink)}
+.find li:last-child{border-bottom:none}
+.find li .sev{font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;
+  height:fit-content;color:#fff;flex:none;margin-top:1px}
+
+/* projects */
+.proj{display:flex;flex-direction:column}
+.proj .pr{padding:13px 0;border-bottom:1px solid var(--rule-2)}
+.proj .pr:first-child{padding-top:0}.proj .pr:last-child{border-bottom:none}
+.proj .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.proj .nm{font-size:13px;font-weight:600;color:var(--ink)}
+.proj .mv{font-size:11px;color:var(--ink-3)}.proj .mv b{color:var(--ink-2);font-weight:600}
+.proj .tt{height:8px;background:var(--rule-2);position:relative}
+.proj .tt i{display:block;height:100%;width:0;transition:width 1s cubic-bezier(.19,1,.22,1)}
+
+/* insight */
+.insight{margin-top:20px;padding:14px 17px;background:var(--navy-t);border-left:3px solid var(--navy);
+  font-size:12.5px;color:var(--ink);line-height:1.6}
+.insight b{color:var(--navy);font-weight:600;font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+  display:block;margin-bottom:4px}
+
+/* chart */
+.chart{width:100%}
+.chart text{font-family:'Prompt',sans-serif}
+.ax{font-size:10px;fill:var(--ink-3)}
+.vlbl{font-size:9.5px;fill:var(--ink-2);font-weight:600}
+
+.foot{margin-top:50px;padding-top:15px;border-top:1px solid var(--rule);display:flex;gap:14px;
+  font-size:11px;color:var(--ink-3);flex-wrap:wrap;justify-content:space-between}
+.foot .k{color:var(--navy);font-weight:600;letter-spacing:.03em}
+
+@media (max-width:900px){
+  .ro-grid{grid-template-columns:repeat(3,1fr)}.ro:nth-child(6n){border-right:1px solid var(--rule-2)}
+  .ro:nth-child(3n){border-right:none}
+  .p2,.p3,.p21,.p12,.p31{grid-template-columns:1fr}
+}
+@media (max-width:600px){
+  .ro-grid{grid-template-columns:repeat(2,1fr)}.ro:nth-child(3n){border-right:1px solid var(--rule-2)}
+  .ro:nth-child(2n){border-right:none}.sec{grid-template-columns:1fr}
+  .spine{display:flex;gap:9px;padding:0 0 4px}.spine::after{display:none}.spine .no{position:static;font-size:19px}
+  .mast .period{margin-left:0;text-align:left}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{body{background:#fff}.sec{break-inside:avoid}.nav,#tt,#modal{display:none!important}}
+/* interactivity */
+.nav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--rule);display:flex;gap:2px;flex-wrap:wrap;
+  padding:8px 0;margin:0 0 4px}
+.nav a{font-size:12px;font-weight:500;color:var(--ink-3);text-decoration:none;padding:6px 11px;border-radius:7px;
+  white-space:nowrap;transition:all .15s;cursor:pointer}
+.nav a:hover{color:var(--ink);background:var(--rule-2)}
+.nav a.on{color:var(--blue);background:var(--navy-t)}
+.nav a b{font-family:'IBM Plex Mono',monospace;color:var(--blue);margin-right:5px;font-weight:600}
+#tt{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:#F8FAFC;font-size:12px;
+  font-weight:500;padding:6px 10px;border-radius:7px;opacity:0;transition:opacity .12s;max-width:240px;
+  box-shadow:0 6px 20px rgba(15,23,42,.25);line-height:1.4}
+#tt b{font-family:'IBM Plex Mono',monospace;color:#fff}
+[data-tip],[data-drill]{cursor:pointer}
+.ro{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.ro:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(15,23,42,.08)}
+.flash{animation:fl 1.2s ease-out}
+@keyframes fl{0%{box-shadow:0 0 0 0 var(--blue)}30%{box-shadow:0 0 0 3px var(--navy-t)}100%{box-shadow:0 0 0 0 transparent}}
+#modal{position:fixed;inset:0;z-index:70;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:20px}
+#modal.on{display:flex}
+.mbox{background:var(--surface);border:1px solid var(--rule);border-radius:14px;max-width:520px;width:100%;
+  max-height:80vh;overflow:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);padding:22px 24px}
+.mbox h4{font-size:17px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.mbox .msub{font-size:12.5px;color:var(--ink-3);margin-bottom:16px}
+.mbox .mclose{float:right;cursor:pointer;color:var(--ink-3);font-size:20px;line-height:1;border:none;background:none}
+.mrow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--rule-2);font-size:13px}
+.mrow:last-child{border-bottom:none}.mrow b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div id="tt"></div>
+<div id="modal"><div class="mbox"><button class="mclose" onclick="closeDrill()">×</button><div id="mbody"></div></div></div>
+<div class="sheet">
+  <nav class="nav" id="nav"></nav>
+
+  <header class="mast">
+    <div class="kick"><span class="eb">GA · Monthly Operations Review</span><span class="eb" id="docref">HO · FM-OR</span></div>
+    <h1 id="mtitle">Maintenance, Facilities &amp; Technical</h1>
+    <div class="sub">Head Office building — monthly executive review across six domains</div>
+    <div class="meta">
+      <div class="item"><span class="eb">Prepared by</span><div class="v" id="mowner">SV. Sek</div></div>
+      <div class="item"><span class="eb">Scope</span><div class="v">HO · 6 domains</div></div>
+      <div class="period"><span class="eb">Reporting period</span><div class="p num" id="mperiod">AUG 2026</div><div class="fy" id="mfy">FY2026 · Apr–Mar</div></div>
+    </div>
+    <div class="status"><span id="ovtext"></span></div>
+  </header>
+
+  <div class="ro-grid" id="readouts"></div>
+
+  <!-- 01 PM -->
+  <section class="sec"><div class="spine"><div class="no">01</div></div><div class="body">
+    <div class="sec-hd"><div><h2>Preventive Maintenance</h2><div class="sub" style="font-size:12px">Asset condition inspection · safety-critical led · HO</div></div><div class="rt" id="pm-rt"></div></div>
+    <div class="panels p21">
+      <div class="panel"><span class="eb">Condition by category <s>checked · normal rate · status</s></span><table id="pm-cat"></table></div>
+      <div class="panel"><span class="eb">Overall condition <s>safety &amp; access units</s></span>
+        <div class="dwrap" id="pm-donut"></div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--rule-2);display:flex;gap:22px;flex-wrap:wrap">
+          <div><div class="eb">Coverage</div><div class="stat" style="font-size:24px" id="pm-cov"></div></div>
+          <div><div class="eb">Normal rate</div><div class="stat" style="font-size:24px" id="pm-norm"></div></div>
+          <div><div class="eb">Abnormal open</div><div class="stat" style="font-size:24px" id="pm-abn"></div></div></div>
+        <div style="margin-top:14px"><span class="eb" style="display:block;margin-bottom:6px">Normal rate — monthly</span><div id="pm-trend"></div></div></div>
+    </div>
+    <div class="panels" style="margin-top:20px">
+      <div class="panel"><span class="eb">Follow-up &amp; scheduled work <s>abnormal items · AC cleaning rounds</s></span><table id="pm-follow"></table></div>
+    </div>
+  </div></section>
+
+  <!-- 02 CCTV -->
+  <section class="sec"><div class="spine"><div class="no">02</div></div><div class="body">
+    <div class="sec-hd"><div><h2>CCTV System</h2><div class="sub" style="font-size:12px">Cameras across 3 NVRs · retention requirement 90 days · survey as of 24 Aug 2026</div></div><div class="rt" id="cctv-rt"></div></div>
+    <div class="panels p21">
+      <div class="panel"><span class="eb">Retention by NVR <s>days retained vs 90-day requirement</s></span><div id="cctv-ret-bars"></div></div>
+      <div class="panel"><span class="eb">Retention compliance <s>NVRs meeting 90 days</s></span>
+        <div class="stat" id="cctv-comp"></div><div class="cap" id="cctv-comp-cap"></div>
+        <div class="meter" style="margin-top:12px" id="cctv-comp-meter"></div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)">
+          <span class="eb" style="display:block;margin-bottom:8px">Cameras by NVR</span><div id="cctv-nvr"></div></div></div>
+    </div>
+    <div class="cap" style="margin-top:8px">Availability (online/offline) &amp; fault log — pending data collection.</div>
+  </div></section>
+
+  <!-- 03 WASTE -->
+  <section class="sec"><div class="spine"><div class="no">03</div></div><div class="body">
+    <div class="sec-hd"><div><h2>Waste Management</h2><div class="sub" style="font-size:12px">Sellable scrap managed by team · general waste disposed by SRE</div></div><div class="rt" id="waste-rt"></div></div>
+    <div class="panels p21">
+      <div class="panel"><span class="eb">General waste <s>overall monthly + cumulative, then by floor</s></span><div id="waste-gen-chart"></div></div>
+      <div class="panel"><span class="eb">Recovery <s>captured for sale</s></span><div class="stat" id="waste-rec"></div><div class="cap" id="waste-rec-cap"></div>
+        <div class="meter" style="margin-top:12px" id="waste-rec-meter"></div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)"><span class="eb" style="display:block;margin-bottom:6px">Revenue FYTD</span>
+          <div class="stat" id="waste-rev"></div><div class="cap" id="waste-rev-cap"></div></div></div>
+    </div>
+    <div class="panels p2" style="margin-top:20px">
+      <div class="panel"><span class="eb">Scrap sold — revenue <s>monthly &amp; cumulative</s></span><div id="waste-sold-chart"></div></div>
+      <div class="panel"><span class="eb">Latest month breakdown <s>by material</s></span><div id="waste-mat"></div></div>
+    </div>
+    <div class="panels" style="margin-top:20px"><div class="panel"><span class="eb">Central Price (ราคากลาง) <s>quarterly — record</s></span><table id="waste-cp"></table></div></div>
+    <div class="panels" style="margin-top:20px"><div class="panel"><span class="eb">Green Office — Gold · Recertification <s>audit timeline</s></span><div id="waste-green"></div></div></div>
+  </div></section>
+
+  <!-- 04 REPAIR -->
+  <section class="sec"><div class="spine"><div class="no">04</div></div><div class="body">
+    <div class="sec-hd"><div><h2>Repair &amp; Maintenance</h2></div><div class="rt" id="rm-rt"></div></div>
+    <div class="panels p21">
+      <div class="panel"><span class="eb">Jobs by executor <s>monthly &amp; cumulative</s></span><div id="rm-exec-chart"></div>
+        <div class="rlg" style="margin-top:10px" id="rm-exec-lg"></div></div>
+      <div class="panel"><span class="eb">Backlog aging <s>open jobs</s></span><div class="aging" id="rm-aging"></div>
+        <div style="margin-top:14px"><div class="hb"><div class="l"><span>Avg turnaround (report→done)</span><b id="rm-mttr"></b></div></div>
+        <div class="hb"><div class="l"><span>Avg response (report→start)</span><b id="rm-resp"></b></div></div>
+        <div class="hb"><div class="l"><span>Cost per job</span><b id="rm-cpj"></b></div></div></div></div>
+    </div>
+    <div class="panels p2" style="margin-top:20px">
+      <div class="panel"><span class="eb">Expense by executor <s>฿ monthly &amp; cumulative</s></span><div id="rm-cost-chart"></div></div>
+      <div class="panel"><span class="eb">Total expense FYTD <s>by executor</s></span><div id="rm-cost-bars"></div>
+        <div class="stat" style="margin-top:12px" id="rm-cost-total"></div><div class="cap">Total repair spend, Apr–Aug 2026</div></div>
+    </div>
+  </div></section>
+
+  <!-- 05 ENERGY -->
+  <section class="sec"><div class="spine"><div class="no">05</div></div><div class="body">
+    <div class="sec-hd"><div><h2>Building Irregularities <span style="font-weight:400;font-size:13px;color:var(--ink-3)">— after-hours (lights / AC / doors / other)</span></h2>
+      <div class="sub" style="font-size:12px">Reported by SRE · verified via CCTV · followed up to closure</div></div><div class="rt" id="en-rt"></div></div>
+    <div class="panels p21">
+      <div class="panel"><span class="eb">Incidents — monthly, cumulative &amp; prior FY <s>FY2026 vs FY2025</s></span><div id="en-chart"></div></div>
+      <div class="panel"><span class="eb">FYTD <s>Apr–Aug 2026</s></span><div class="stat" id="en-total"></div><div class="cap" id="en-total-cap"></div>
+        <div style="margin-top:12px"><span class="eb" style="display:block;margin-bottom:8px">By type</span><div id="en-type"></div></div>
+        <div style="margin-top:12px"><span class="eb" style="display:block;margin-bottom:6px">Follow-up status</span>
+          <div class="ratio" id="en-status"></div><div class="rlg" id="en-status-lg"></div></div></div>
+    </div>
+    <div class="panels" style="margin-top:20px"><div class="panel"><span class="eb">By floor <s>FYTD — repeat-offender floors highlighted</s></span><div id="en-floor"></div></div></div>
+  </div></section>
+
+  <!-- 06 RENOVATION -->
+  <section class="sec"><div class="spine"><div class="no">06</div></div><div class="body">
+    <div class="sec-hd"><div><h2>Renovation</h2></div><div class="rt" id="reno-rt"></div></div>
+    <div class="panels p12">
+      <div class="panel"><span class="eb">Portfolio <s>overall</s></span><div class="dwrap"><div id="reno-donut"></div><div class="legend" id="reno-legend"></div></div>
+        <div class="stat" style="margin-top:14px" id="reno-avg"></div><div class="cap">Average completion across 5 projects</div>
+        <div style="margin-top:14px"><span class="eb" style="display:block;margin-bottom:8px">Upcoming move-ins</span><table id="reno-move"></table></div></div>
+      <div class="panel"><span class="eb">Planned projects <s>% complete · status · schedule risk</s></span><div class="proj" id="reno-list"></div></div>
+    </div>
+    <div class="panels" style="margin-top:20px">
+      <div class="panel"><span class="eb">Ad-hoc requests <s>out-of-plan work — monthly &amp; cumulative</s></span>
+        <div class="panels p21" style="gap:22px"><div id="reno-adhoc-chart"></div><table id="reno-adhoc"></table></div></div>
+    </div>
+  </div></section>
+
+  <div class="foot"><span><span class="k">DATA</span> · All sections use real figures where available; PM uses Emergency Light actuals with other categories assumed on-plan; Waste general (ex-Jul) &amp; CCTV availability pending. Edit the DATA block at top of file.</span><span class="num" id="foot-gen"></span></div>
+</div>
+
+<script>
+/* =========================== DATA =========================== */
+const M=['Apr','May','Jun','Jul','Aug'];
+const DATA={
+ meta:{title:"Maintenance, Facilities & Technical",owner:"SV. Sek",period:"AUG 2026",fy:"FY2026 · Apr–Mar",docref:"HO · FM-OR-2608"},
+ pm:{ // Emergency Light = real; others assumed on-plan/normal where not yet reported
+   note:"Emergency Light figures are actuals; other categories assumed on-plan / normal where not yet reported.",
+   categories:[
+     {c:"Emergency Light", grp:"Safety", scope:106, checked:103, normal:96, abnormal:7, pending:3, status:"Partial", lv:"warn"},
+     {c:"Fire Exit Sign",  grp:"Safety", scope:16,  checked:16,  normal:16, abnormal:0, pending:0, status:"Done", lv:"ok"},
+     {c:"AED",             grp:"Safety", scope:3,   checked:3,   normal:3,  abnormal:0, pending:0, status:"Done", lv:"ok"},
+     {c:"Auto Door / Door",grp:"Access", scope:95,  checked:95,  normal:95, abnormal:0, pending:0, status:"Done", lv:"ok"},
+     {c:"Meeting Room Check",grp:"General", status:"Done", lv:"ok"},
+     {c:"Fitness Equipment", grp:"General", status:"Done", lv:"ok"},
+     {c:"Air Condition Cleaning", grp:"General", status:"Round 1 done · Round 2 Oct–Nov", lv:"ok"},
+   ],
+   monthlyNormalRate:[100,100,100,100,97],  // Apr–Jul assumed on-plan; Aug real (EL findings)
+   follow:[
+     {loc:"Fl 12", item:"Emergency Light", issue:"Battery failed on 30-min test", action:"Battery replaced", status:"Closed", lv:"ok"},
+     {loc:"Fl 11", item:"Emergency Light", issue:"LED lamps out (part of 7 abnormal)", action:"Lamps on order", status:"In progress", lv:"warn"},
+     {loc:"Fl 15", item:"Emergency Light", issue:"Units under re-verification", action:"Re-inspect + rectify", status:"In progress", lv:"warn"},
+     {loc:"All floors", item:"Air Condition Cleaning", issue:"Round 1 (May–Jun) completed", action:"Round 2 scheduled Oct–Nov (SRE)", status:"On plan", lv:"ok"},
+   ]},
+ cctv:{ req:90, updated:"24 Aug 2026",
+   nvr:[
+     {name:"NVR1 (TV1)", cams:31, retention:122, floors:"G, 2–5, 7"},
+     {name:"NVR2 (TV2)", cams:32, retention:52,  floors:"7–11, 14, 15"},
+     {name:"NVR3 (TV3)", cams:20, retention:80,  floors:"15–18"},
+   ]},
+ waste:{ genByFloor:[["17",1700.2],["10",1451.1],["16",1449.6],["18",1439.3],["15",1420.9],["5",1393.0],["3",1344.5],["11",1291.5],["14",1103.4],["12 (FID)",1019.5],["9",952.5],["4",713.9],["12 (TFTC)",666.0],["2",567.0],["8",533.1],["7",310.5],["G",86.1]],
+   general:[2722.5,3147.8,3820.1,3686.7,4065.0], soldKg:[482,508,560,533,520], rev:[395,422,478,465,450],
+   material:[{m:"Cardboard boxes",kg:199.67,p:1.00},{m:"Clear bottles",kg:123.90,p:1.50},
+     {m:"Colored paper",kg:168.40,p:0.25},{m:"Cans",kg:35.81,p:1.00},{m:"White paper",kg:4.76,p:0.25}],
+   central:[{q:"Q1 (Apr–Jun)",st:"Done",lv:"ok",date:"13 May 2026",done:true},{q:"Q2 (Jul–Sep)",st:"Done",lv:"ok",date:"27 Jun 2026",done:true},
+     {q:"Q3 (Oct–Dec)",st:"Starting this month",lv:"warn",date:"—",done:false},{q:"Q4 (Jan–Mar)",st:"Planned Dec",lv:"mut",date:"—",done:false}],
+   cpList:[{m:"Cardboard boxes",p:1.00},{m:"Clear bottles",p:1.50},{m:"Colored paper",p:0.25},{m:"Cans",p:1.00},{m:"White paper",p:0.25}],
+   green:{cert:"Green Office — Gold",note:"Recertification (renewal) · Category 4 data prepared",
+     milestones:[{m:"Pre-audit 1",d:"26 Aug 2026",st:"Done",lv:"ok"},{m:"Pre-audit 2",d:"16 Oct 2026",st:"Upcoming",lv:"warn"},{m:"Final Audit",d:"13 Nov 2026",st:"Upcoming",lv:"mut"}]}},
+ repair:{ exec:{inhouse:[0,4,1,0,0],sre:[6,7,15,8,7],vendor:[2,0,1,1,3]},
+   cost:{inhouse:[0,29,9,0,0],sre:[14,25,43,16,2],vendor:[187,0,5,4,131]}, // ฿'000 monthly, real
+   backlog:[{k:"0–7 d",n:0},{k:"8–30 d",n:0},{k:"30+ d",n:0}],
+   mttr:0.7, resp:0.4 },
+ energy:{ // REAL FY2026
+   fy26:[1,4,8,8,4], fy25:[6,4,2,4,4],
+   type:[{t:"Lights not off",n:24,c:'var(--amber)'},{t:"AC not off",n:1,c:'var(--blue)'},
+     {t:"Door not closed",n:0,c:'var(--navy)'},{t:"Others",n:0,c:'var(--ink-3)'}],
+   floor:[{f:"16",n:5},{f:"8",n:4},{f:"17",n:3},{f:"9",n:3},{f:"2",n:2},{f:"14",n:2},
+     {f:"3",n:1},{f:"5",n:1},{f:"10",n:1},{f:"12",n:1},{f:"15",n:1},{f:"18",n:1}],
+   monthly:[
+     {f:[["14",1]], t:[["Lights",1]]},
+     {f:[["16",1],["17",1],["8",1],["9",1]], t:[["Lights",4]]},
+     {f:[["8",2],["15",1],["5",1],["9",1],["3",1],["2",1],["10",1]], t:[["Lights",7],["AC",1]]},
+     {f:[["16",2],["18",1],["17",1],["9",1],["2",1],["14",1],["8",1]], t:[["Lights",8]]},
+     {f:[["16",2],["17",1],["12",1]], t:[["Lights",4]]}],
+   closed:24, pending:1 },
+ reno:[ // REAL from Gantt
+   {n:"15FL — New Office",pc:100,st:"Complete",lv:"ok",risk:"Complete",rlv:"ok",move:"In use 31 Aug 2026"},
+   {n:"12FL — Umami Kitchen (CEC)",pc:42,st:"In Progress",lv:"ok",risk:"On track",rlv:"ok",move:"01 Dec 2026"},
+   {n:"12FL — Umai Kitchen",pc:46,st:"In Progress",lv:"ok",risk:"On track",rlv:"ok",move:"01 Nov 2026"},
+   {n:"3FL — Office (NEW)",pc:30,st:"In Progress",lv:"ok",risk:"Monitor",rlv:"warn",move:"01 Dec 2026"},
+   {n:"5FL — Change Furniture",pc:15,st:"In Progress",lv:"ok",risk:"On track",rlv:"ok",move:"01 Dec 2026"}],
+ adhoc:{ counts:[1,1,3,0,2],
+   items:[{d:"17 May 2026",f:"14",it:"Add 2 staff desk sets (KOKUYO)",st:"Done",lv:"ok"},
+     {d:"24 May 2026",f:"16",it:"BU — +1 Mgr, +5 Staff desks",st:"Done",lv:"ok"},
+     {d:"—",f:"5",it:"IS — +2 Staff desks",st:"Done",lv:"ok"},
+     {d:"28 Jun 2026",f:"3",it:"Install manager desk, Zone C (Thai Chiwanon)",st:"Done",lv:"ok"},
+     {d:"04 Jul 2026",f:"15",it:"Replace staff desk tops (KOKUYO)",st:"Done",lv:"ok"},
+     {d:"Due Sep",f:"18",it:"HR — +Staff desks",st:"Due Sep",lv:"warn"},
+     {d:"Due Sep",f:"18",it:"GA — +2 Staff desks",st:"Due Sep",lv:"warn"}]}
+};
+
+/* =========================== HELPERS =========================== */
+const $=id=>document.getElementById(id);
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const cum=a=>a.map((_,i)=>sum(a.slice(0,i+1)));
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const C={ok:'var(--ok)',warn:'var(--warn)',alert:'var(--alert)',navy:'var(--navy)',blue:'var(--blue)',amber:'var(--amber)',mut:'var(--ink-3)'};
+const stt=(v,g,o)=>v>=g?'ok':v>=o?'warn':'alert';
+
+// bars(monthly) + cumulative line, dual axis. opts:{bars,line,barColor,lineColor,barFmt,lineFmt,labels}
+function barLine(o){
+  const W=320,H=150,pt=16,pb=22,pl=6,pr=6, iw=W-pl-pr, ih=H-pt-pb;
+  const n=o.bars.length, bw=iw/n*0.52, gap=iw/n;
+  const bmax=Math.max(...o.bars)*1.15||1, lmax=Math.max(...o.line)*1.1||1;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  // gridlines
+  for(let g=0;g<=2;g++){const y=pt+ih*g/2;s+=`<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="var(--rule-2)" stroke-width="1"/>`;}
+  // bars
+  o.bars.forEach((v,i)=>{const x=pl+gap*i+(gap-bw)/2,bh=v/bmax*ih,y=pt+ih-bh;
+    s+=`<rect x="${x.toFixed(1)}" y="${(pt+ih).toFixed(1)}" width="${bw.toFixed(1)}" height="0" fill="${o.barColor}" class="gbar" data-y="${y.toFixed(1)}" data-h="${bh.toFixed(1)}"/>`;
+    s+=`<text class="vlbl" x="${(x+bw/2).toFixed(1)}" y="${(y-3).toFixed(1)}" text-anchor="middle">${o.barFmt(v)}</text>`;
+    s+=`<text class="ax" x="${(x+bw/2).toFixed(1)}" y="${H-8}" text-anchor="middle">${o.labels[i]}</text>`;});
+  // cumulative line
+  const pts=o.line.map((v,i)=>[pl+gap*i+gap/2, pt+ih-(v/lmax*ih)]);
+  const path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  s+=`<path d="${path}" fill="none" stroke="${o.lineColor}" stroke-width="2" class="gline" stroke-dasharray="1000" stroke-dashoffset="1000"/>`;
+  pts.forEach((p,i)=>{s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="${o.lineColor}" class="gdot" opacity="0"/>`;
+    if(o.lineFmt) s+=`<text class="vlbl" x="${p[0].toFixed(1)}" y="${(p[1]-6).toFixed(1)}" text-anchor="middle" fill="${o.lineColor}" style="font-weight:600">${o.lineFmt(o.line[i])}</text>`;});
+  s+=`</svg>`;return s;
+}
+// general-waste overview: monthly line + cumulative area line (no bars)
+function genOverview(vals,labels){
+  const cumv=cum(vals);
+  const W=320,H=138,pt=18,pb=22,pl=6,pr=6,iw=W-pl-pr,ih=H-pt-pb;
+  const n=labels.length,gap=iw/n,mx=Math.max(...cumv)*1.1||1,Y=v=>pt+ih-(v/mx)*ih;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  for(let g=0;g<=2;g++){const y=pt+ih*g/2;s+=`<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="var(--rule-2)"/>`;}
+  labels.forEach((lb,i)=>s+=`<text class="ax" x="${(pl+gap*i+gap/2).toFixed(1)}" y="${H-8}" text-anchor="middle">${lb}</text>`);
+  const cp=cumv.map((v,i)=>[pl+gap*i+gap/2,Y(v)]);
+  s+=`<path d="M${cp[0][0].toFixed(1)} ${pt+ih} ${cp.map(p=>'L'+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')} L${cp[n-1][0].toFixed(1)} ${pt+ih} Z" fill="var(--ochre)" opacity=".08"/>`;
+  s+=`<path d="${cp.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')}" fill="none" stroke="var(--ochre)" stroke-width="2" class="gline" stroke-dasharray="1000" stroke-dashoffset="1000"/>`;
+  cp.forEach((p,i)=>{s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="var(--ochre)" class="gdot" opacity="0" data-tip="Cumulative ${labels[i]}: <b>${fmt(cumv[i])}</b> kg"/>`;
+    s+=`<text class="vlbl" x="${p[0].toFixed(1)}" y="${(p[1]-5).toFixed(1)}" text-anchor="${i===0?'start':i===n-1?'end':'middle'}" fill="var(--ochre)" style="font-weight:600">${fmt(cumv[i]/1000)}k</text>`;});
+  const mp=vals.map((v,i)=>[pl+gap*i+gap/2,Y(v)]);
+  s+=`<path d="${mp.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')}" fill="none" stroke="var(--blue)" stroke-width="2" class="gline" stroke-dasharray="1000" stroke-dashoffset="1000"/>`;
+  mp.forEach((p,i)=>{s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="var(--blue)" class="gdot" opacity="0" data-tip="${labels[i]}: <b>${fmt(vals[i])}</b> kg"/>`;
+    s+=`<text class="vlbl" x="${p[0].toFixed(1)}" y="${(p[1]+12).toFixed(1)}" text-anchor="${i===0?'start':i===n-1?'end':'middle'}" fill="var(--blue)">${fmt(vals[i])}</text>`;});
+  s+=`</svg>`;return s;
+}
+// stacked monthly bars + cumulative total line
+function stacked(o){
+  const W=320,H=150,pt=16,pb=22,pl=6,pr=6, iw=W-pl-pr, ih=H-pt-pb;
+  const n=o.labels.length, bw=iw/n*0.52, gap=iw/n;
+  const totals=o.labels.map((_,i)=>sum(o.series.map(se=>se.vals[i])));
+  const bmax=Math.max(...totals)*1.15||1;
+  const cm=cum(totals), lmax=Math.max(...cm)*1.05||1;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  for(let g=0;g<=2;g++){const y=pt+ih*g/2;s+=`<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="var(--rule-2)"/>`;}
+  o.labels.forEach((lb,i)=>{let yacc=pt+ih;const x=pl+gap*i+(gap-bw)/2;
+    const monTip=`<b>${lb} · ${totals[i]}</b>`+(o.names?'<br>'+o.series.map((se,si)=>`${o.names[si]} ${se.vals[i]}`).join(' · '):'');
+    o.series.forEach(se=>{const bh=se.vals[i]/bmax*ih; yacc-=bh;
+      s+=`<rect x="${x.toFixed(1)}" y="${yacc.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${se.c}" class="sbar" data-tip="${monTip}"/>`;});
+    s+=`<text class="vlbl" x="${(x+bw/2).toFixed(1)}" y="${(yacc-3).toFixed(1)}" text-anchor="middle">${totals[i]}</text>`;
+    s+=`<text class="ax" x="${(x+bw/2).toFixed(1)}" y="${H-8}" text-anchor="middle">${lb}</text>`;});
+  const pts=cm.map((v,i)=>[pl+gap*i+gap/2, pt+ih-(v/lmax*ih)]);
+  s+=`<path d="${pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')}" fill="none" stroke="var(--ochre)" stroke-width="2" class="gline" stroke-dasharray="1000" stroke-dashoffset="1000"/>`;
+  pts.forEach(p=>s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.4" fill="var(--ochre)" class="gdot" opacity="0"/>`);
+  s+=`</svg>`;return s;
+}
+// two cumulative lines compare (FY vs FY)
+function compareLines(o){
+  const W=320,H=150,pt=16,pb=22,pl=6,pr=6, iw=W-pl-pr, ih=H-pt-pb;
+  const n=o.labels.length, gap=iw/n, bw=iw/n*0.5;
+  const bmax=Math.max(...o.bars)*1.2||1;
+  const allc=[...o.cumA,...o.cumB], lmax=Math.max(...allc)*1.05||1;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  for(let g=0;g<=2;g++){const y=pt+ih*g/2;s+=`<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="var(--rule-2)"/>`;}
+  // current-year monthly bars
+  o.bars.forEach((v,i)=>{const x=pl+gap*i+(gap-bw)/2,bh=v/bmax*ih,y=pt+ih-bh;
+    s+=`<rect x="${x.toFixed(1)}" y="${(pt+ih).toFixed(1)}" width="${bw.toFixed(1)}" height="0" fill="var(--blue-2)" class="gbar" data-y="${y.toFixed(1)}" data-h="${bh.toFixed(1)}" data-tip="${o.tips?o.tips[i]:o.labels[i]+': <b>'+v+'</b> this FY'}"/>`;
+    s+=`<text class="vlbl" x="${(x+bw/2).toFixed(1)}" y="${(y-3).toFixed(1)}" text-anchor="middle">${v}</text>`;
+    s+=`<text class="ax" x="${(x+bw/2).toFixed(1)}" y="${H-8}" text-anchor="middle">${o.labels[i]}</text>`;});
+  const line=(arr,color,dash,nm)=>{const pts=arr.map((v,i)=>[pl+gap*i+gap/2,pt+ih-(v/lmax*ih)]);
+    let p=`<path d="${pts.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ')}" fill="none" stroke="${color}" stroke-width="2" ${dash?'stroke-dasharray="4 3"':'class="gline" stroke-dasharray="1000" stroke-dashoffset="1000"'}/>`;
+    pts.forEach((q,ci)=>p+=`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="3.4" fill="${color}" class="gdot" opacity="${dash?1:0}" data-tip="${nm} ${o.labels[ci]}: <b>${arr[ci]}</b>"/>`);return p;};
+  s+=line(o.cumB,'var(--ink-3)',true,'FY25');
+  s+=line(o.cumA,'var(--ochre)',false,'FY26');
+  s+=`</svg>`;return s;
+}
+function meter(pct,target,color,scR){const notch=target!=null?`<span class="notch" style="left:${target}%"></span>`:'';
+  return `<div class="meter"><div class="tk"><i data-w="${pct}" style="background:${color}"></i>${notch}</div>
+    <div class="sc"><span>0</span><span>${scR||100}</span></div></div>`;}
+function hbars(items,max,fmtv){return items.map(it=>`<div class="hb" data-tip="${it.n||it.f}: <b>${fmtv(it.v)}</b>"><div class="l"><span>${it.n||it.f}</span><b class="num">${fmtv(it.v)}</b></div>
+  <div class="t"><i data-w="${Math.round(it.v/max*100)}" style="background:${it.c||'var(--blue)'}"></i></div></div>`).join('');}
+function donut(segs){const tot=sum(segs.map(s=>s.value))||1;const R=42,CC=2*Math.PI*R;let off=0;
+  let s=`<svg width="104" height="104" viewBox="0 0 104 104">`;
+  segs.forEach(sg=>{const frac=sg.value/tot,len=CC*frac;
+    s+=`<circle cx="52" cy="52" r="${R}" fill="none" stroke="${sg.color}" stroke-width="13"
+      stroke-dasharray="${len} ${CC-len}" stroke-dashoffset="${-off}" transform="rotate(-90 52 52)"/>`;off+=len;});
+  s+=`<circle cx="52" cy="52" r="30" fill="var(--surface)"/><text x="52" y="49" text-anchor="middle" font-size="18" font-weight="600" fill="var(--ink)">${segs[0].c0||''}</text>
+    <text x="52" y="63" text-anchor="middle" font-size="9" fill="var(--ink-3)">${segs[0].c1||''}</text></svg>`;return s;}
+function lineChart(o){
+  const W=320,H=150,pt=18,pb=22,pl=6,pr=8, iw=W-pl-pr, ih=H-pt-pb;
+  const all=o.series.flatMap(s=>s.vals); let mx=Math.max(...all), mn=(o.min!=null?o.min:Math.min(...all));
+  const span=(mx-mn)||1; mx+=span*0.12; mn-=span*0.12; if(o.min!=null)mn=o.min;
+  const n=o.labels.length, gap=iw/(n-1||1);
+  const X=i=>pl+gap*i, Y=v=>pt+ih-((v-mn)/((mx-mn)||1))*ih;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  for(let g=0;g<=2;g++){const y=pt+ih*g/2;s+=`<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="var(--rule-2)"/>`;}
+  o.labels.forEach((lb,i)=>s+=`<text class="ax" x="${X(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${lb}</text>`);
+  o.series.forEach(se=>{const pts=se.vals.map((v,i)=>[X(i),Y(v)]);
+    if(se.fill)s+=`<path d="M${pts[0][0].toFixed(1)} ${(pt+ih)} ${pts.map(p=>'L'+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')} L${pts[pts.length-1][0].toFixed(1)} ${(pt+ih)} Z" fill="${se.color}" opacity=".07"/>`;
+    s+=`<path d="${pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${se.color}" stroke-width="2.2" ${se.dash?`stroke-dasharray="4 3"`:'class="gline" stroke-dasharray="1000" stroke-dashoffset="1000"'}/>`;
+    pts.forEach((p,i)=>{s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="${se.color}" class="gdot" opacity="${se.dash?1:0}" data-tip="${o.labels[i]}: <b>${o.valFmt?o.valFmt(se.vals[i]):se.vals[i]}</b>"/>`;
+      if(o.valFmt)s+=`<text class="vlbl" x="${p[0].toFixed(1)}" y="${(p[1]-6).toFixed(1)}" text-anchor="${i===0?'start':i===se.vals.length-1?'end':'middle'}">${o.valFmt(se.vals[i])}</text>`;});});
+  s+=`</svg>`;return s;}
+
+/* =========================== RENDER =========================== */
+$('mtitle').textContent=DATA.meta.title;$('mowner').textContent=DATA.meta.owner;
+$('mperiod').textContent=DATA.meta.period;$('mfy').textContent=DATA.meta.fy;$('docref').textContent=DATA.meta.docref;
+
+const pm=DATA.pm, pmU=pm.categories.filter(c=>c.scope);
+const pmScope=sum(pmU.map(c=>c.scope)), pmChecked=sum(pmU.map(c=>c.checked)), pmNormal=sum(pmU.map(c=>c.normal)),
+  pmAbn=sum(pmU.map(c=>c.abnormal)), pmPend=sum(pmU.map(c=>c.pending));
+const pmCov=Math.round(pmChecked/pmScope*100), pmNormRate=Math.round(pmNormal/pmChecked*100);
+const cc=DATA.cctv, cctvCam=sum(cc.nvr.map(n=>n.cams)), cctvMeet=cc.nvr.filter(n=>n.retention>=cc.req).length,
+  cctvCamMeet=sum(cc.nvr.filter(n=>n.retention>=cc.req).map(n=>n.cams)), cctvComp=Math.round(cctvCamMeet/cctvCam*100);
+const wa=DATA.waste, wGen=sum(wa.general), wSoldK=sum(wa.soldKg), wRev=sum(wa.rev), wRec=(wSoldK/(wGen+wSoldK)*100).toFixed(1);
+const rp=DATA.repair, rpExecTot={inhouse:sum(rp.exec.inhouse),sre:sum(rp.exec.sre),vendor:sum(rp.exec.vendor)};
+const rpJobs=rpExecTot.inhouse+rpExecTot.sre+rpExecTot.vendor, rpBacklog=sum(rp.backlog.map(b=>b.n));
+const rpCostTot=sum([...rp.cost.inhouse,...rp.cost.sre,...rp.cost.vendor]);
+const en=DATA.energy, enTot=sum(en.fy26), en25=sum(en.fy25), enFloorMax=Math.max(...en.floor.map(f=>f.n));
+const reno=DATA.reno, renoAvg=Math.round(sum(reno.map(r=>r.pc))/reno.length);
+const ah=DATA.adhoc;
+
+// READOUTS
+const ros=[
+ {eb:"PM Normal Rate",v:`${pmNormRate}<s>%</s>`,d:`<span class="${pmAbn?'dn':'up'}">${pmAbn} abnormal open</span>`,meter:[pmNormRate,95,C[stt(pmNormRate,95,85)]]},
+ {eb:"CCTV Retention",v:`${cctvComp}<s>%</s>`,d:`<span class="${cctvComp>=100?'up':'dn'}">${cctvMeet}/${cc.nvr.length} NVR ≥90d</span>`,meter:[cctvComp,null,C[cctvComp>=100?'ok':'warn']]},
+ {eb:"Waste Recovery",v:`${wRec}<s>%</s>`,d:`<span class="fl">${fmt(wSoldK)} kg sold</span>`,meter:[Math.round(wRec),null,C.blue]},
+ {eb:"Repair Backlog",v:`${rpBacklog}<s> open</s>`,d:`<span class="fl">MTTR ${rp.mttr}d</span>`,meter:null},
+ {eb:"Irregularities",v:`${enTot}<s> FYTD</s>`,d:`<span class="${enTot>=en25?'dn':'up'}">${enTot>=en25?'▲':'▼'} vs ${en25} last FY</span>`,meter:null},
+ {eb:"Renovation",v:`${renoAvg}<s>%</s>`,d:`<span class="fl">${reno.length} projects</span>`,meter:[renoAvg,null,C.navy]},
+];
+$('readouts').innerHTML=ros.map(r=>`<div class="ro"><span class="eb">${r.eb}</span><div class="v num">${r.v}</div>
+  <div class="d">${r.d}</div>${r.meter?`<div class="spk">${meter(r.meter[0],r.meter[1],r.meter[2])}</div>`:''}</div>`).join('');
+const nFlags=[pmNormRate<95,cctvComp<100,enTot>en25].filter(Boolean).length;
+$('ovtext').innerHTML=`Operations <b>within control</b> this period. Watch items: ${pmAbn} emergency-light units abnormal (follow-up in progress), CCTV retention below 90 days on 2 of 3 NVRs (rebalance planned), and irregularities up vs last FY (Floor 16 recurring). Renovation on track — 15FL complete and in use.`;
+
+// 01 PM
+$('pm-rt').innerHTML=`${pmChecked}/${pmScope} units checked · ${pmCov}% coverage`;
+$('pm-cat').innerHTML=`<thead><tr><th>Category</th><th class="r">Condition</th></tr></thead>
+  <tbody>${pm.categories.map(c=>{let r;
+    if(c.abnormal>0)r=`<span class="n" style="color:var(--warn);font-weight:600">${Math.round(c.normal/c.checked*100)}%</span> <span style="color:var(--ink-3)">· ${c.abnormal} abnormal</span>`;
+    else if(c.scope)r=`<span style="color:var(--ok);font-weight:600">✓</span> <span style="color:var(--ink-3)">${c.checked}/${c.scope}</span>`;
+    else if(c.status==='Done')r=`<span style="color:var(--ok);font-weight:600">✓</span>`;
+    else r=`<span style="color:var(--ink-2)">${c.status}</span>`;
+    return `<tr${c.abnormal>0?' data-drill="pmabn"':''}><td class="k">${c.c}</td><td class="r">${r}</td></tr>`;}).join('')}</tbody>`;
+$('pm-donut').innerHTML=`${donut([{value:pmNormal,color:'var(--ok)',c0:pmNormRate+'%',c1:'normal'},{value:pmAbn,color:'var(--alert)'},{value:pmPend,color:'var(--rule)'}])}
+  <div class="legend"><div><span class="sw" style="background:var(--ok)"></span>Normal <b>${pmNormal}</b></div>
+  <div><span class="sw" style="background:var(--alert)"></span>Abnormal <b>${pmAbn}</b></div>
+  <div><span class="sw" style="background:var(--rule)"></span>Not checked <b>${pmPend}</b></div></div>`;
+$('pm-cov').innerHTML=`${pmCov}<s>%</s>`;
+$('pm-norm').innerHTML=`${pmNormRate}<s>%</s>`;
+$('pm-abn').innerHTML=`${pmAbn}`;
+$('pm-trend').innerHTML=lineChart({series:[{vals:pm.monthlyNormalRate,color:'var(--blue)',fill:true}],labels:M,valFmt:v=>v+'%',min:80});
+$('pm-follow').innerHTML=`<thead><tr><th>Location</th><th>Item</th><th>Issue</th><th>Action</th><th>Status</th></tr></thead>
+  <tbody>${pm.follow.map(f=>`<tr><td class="k">${f.loc}</td><td>${f.item}</td><td>${f.issue}</td><td>${f.action}</td>
+    <td><span class="pill ${f.lv}">${f.status}</span></td></tr>`).join('')}</tbody>`;
+
+// 02 CCTV
+$('cctv-rt').innerHTML=`${cctvCam} cameras · ${cc.nvr.length} NVRs`;
+const retMax=Math.max(...cc.nvr.map(n=>n.retention),cc.req)*1.05;
+$('cctv-ret-bars').innerHTML=cc.nvr.map(n=>{const lv=n.retention>=cc.req?'ok':n.retention>=70?'warn':'alert';
+  return `<div data-tip="${n.name}: <b>${n.retention}</b> days (need 90) · ${n.cams} cams" style="margin-bottom:15px"><div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:5px">
+    <span><b style="color:var(--ink)">${n.name}</b> <span style="color:var(--ink-3)">· ${n.cams} cams · Fl ${n.floors}</span></span>
+    <b class="num" style="color:var(--${lv})">${n.retention} d</b></div>
+    <div style="height:10px;background:var(--rule-2);position:relative">
+      <i data-w="${Math.round(n.retention/retMax*100)}" style="display:block;height:100%;width:0;background:var(--${lv});transition:width .9s cubic-bezier(.19,1,.22,1)"></i>
+      <span style="position:absolute;top:-3px;bottom:-3px;left:${Math.round(cc.req/retMax*100)}%;width:1.5px;background:var(--ink)"></span></div></div>`;}).join('')
+  + `<div style="font-size:10.5px;color:var(--ink-3);margin-top:2px">Black line = 90-day requirement · green meets it, amber/red fall short</div>`;
+$('cctv-comp').innerHTML=`${cctvMeet}<s> / ${cc.nvr.length} NVR</s>`;
+$('cctv-comp-cap').innerHTML=`${cctvCamMeet} of ${cctvCam} cameras (${cctvComp}%) currently meet the 90-day requirement`;
+$('cctv-comp-meter').innerHTML=meter(cctvComp,null,C.warn);
+$('cctv-nvr').innerHTML=hbars(cc.nvr.map(n=>({n:n.name,v:n.cams})),Math.max(...cc.nvr.map(n=>n.cams)),v=>v+' cams');
+
+// 03 WASTE
+$('waste-rt').innerHTML=`~${fmt(wGen+wSoldK)} kg total · FYTD`;
+const gf=wa.genByFloor, gfMax=gf[0][1], gfTot=gf.reduce((s,f)=>s+f[1],0);
+$('waste-gen-chart').innerHTML=genOverview(wa.general,M)
+  +`<div class="rlg" style="margin:2px 0 3px"><span><span class="sw" style="background:var(--blue)"></span>Monthly</span><span><span class="sw" style="background:var(--ochre)"></span>Cumulative</span></div>
+    <div style="font-size:10px;color:var(--ink-3);margin-bottom:14px">kg · Jul actual; other months estimated</div>
+    <span class="eb" style="display:block;margin-bottom:9px">By floor <s>FYTD Apr–Aug · top 6</s></span>`
+  +gf.slice(0,6).map((f,i)=>`<div data-tip="Floor ${f[0]}: <b>${Math.round(f[1])}</b> kg FYTD" style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+    <span style="width:70px;font-size:12px;color:var(--ink-2);flex:none">Floor ${f[0]}</span>
+    <div style="flex:1;height:11px;background:var(--rule-2)"><i data-w="${Math.round(f[1]/gfMax*100)}" style="display:block;height:100%;width:0;background:${i===0?'var(--navy)':'var(--blue)'};transition:width .9s cubic-bezier(.19,1,.22,1)"></i></div>
+    <span class="num" style="width:54px;text-align:right;font-size:12px;font-weight:600;color:var(--ink);flex:none">${Math.round(f[1])}</span></div>`).join('')
+  +`<div style="font-size:10.5px;color:var(--ink-3);margin-top:5px">Top 6 of ${gf.length} floors · FYTD total ${fmt(gfTot)} kg</div>`;
+$('waste-rec').innerHTML=`${wRec}<s>%</s>`;$('waste-rec-cap').innerHTML=`${fmt(wSoldK)} kg sold · ${fmt(wGen)} kg to SRE`;
+$('waste-rec-meter').innerHTML=meter(Math.round(wRec),null,C.blue);
+$('waste-rev').innerHTML=`฿${fmt(wRev)}`;$('waste-rev-cap').innerHTML=`avg ฿${(wRev/wSoldK).toFixed(2)}/kg`;
+$('waste-sold-chart').innerHTML=lineChart({series:[{vals:cum(wa.rev),color:'var(--ochre)',fill:true}],labels:M,valFmt:v=>'฿'+fmt(v),min:0});
+const wRevTot=sum(wa.material.map(m=>m.kg*m.p));
+const ms=[...wa.material].sort((a,b)=>b.kg*b.p-a.kg*a.p), mMax=Math.max(...ms.map(m=>m.kg*m.p));
+$('waste-mat').innerHTML=ms.map(m=>{const a=m.kg*m.p;return `<div data-tip="${m.m}: <b>${m.kg.toFixed(1)}</b> kg · ฿${a.toFixed(2)}" style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+  <span style="width:120px;font-size:12.5px;color:var(--ink-2);flex:none">${m.m}</span>
+  <div style="flex:1;height:11px;background:var(--rule-2)"><i data-w="${Math.round(a/mMax*100)}" style="display:block;height:100%;width:0;background:var(--blue);transition:width .9s cubic-bezier(.19,1,.22,1)"></i></div>
+  <span class="num" style="width:54px;text-align:right;font-size:12.5px;font-weight:600;color:var(--ink);flex:none">฿${a.toFixed(0)}</span></div>`;}).join('')
+  +`<div style="font-size:10.5px;color:var(--ink-3);margin-top:4px">Total ฿${wRevTot.toFixed(0)} · ${fmt(sum(wa.material.map(m=>m.kg)))} kg · Jul</div>`;
+$('waste-cp').innerHTML=`<thead><tr><th>Quarter</th><th>Status</th><th>Established</th>
+   ${wa.cpList.map(c=>`<th class="r">${c.m.split(' ')[0]}</th>`).join('')}</tr></thead>
+  <tbody>${wa.central.map((q,i)=>`<tr><td class="k">${q.q}</td><td><span class="pill ${q.lv}">${q.st}</span></td><td>${q.date}</td>
+   ${wa.cpList.map(c=>`<td class="r n">${q.done?c.p.toFixed(2):'—'}</td>`).join('')}</tr>`).join('')}</tbody>`;
+const gr=wa.green;
+$('waste-green').innerHTML=`<div style="display:flex;gap:12px;flex-wrap:wrap">${gr.milestones.map((ms,i)=>`
+  <div style="flex:1;min-width:130px;border:1px solid var(--rule);padding:11px 13px;position:relative">
+    <div class="eb" style="color:var(--ink-3)">${ms.m}</div>
+    <div style="font-size:15px;font-weight:600;color:var(--ink);margin:3px 0 7px">${ms.d}</div>
+    <span class="pill ${ms.lv}">${ms.st}</span>
+    ${i<gr.milestones.length-1?'<span style="position:absolute;right:-9px;top:50%;color:var(--ink-3);font-size:13px">→</span>':''}</div>`).join('')}</div>
+  <div style="font-size:11.5px;color:var(--ink-3);margin-top:9px"><b style="color:var(--ink-2)">${gr.cert}</b> · ${gr.note}</div>`;
+
+// 04 REPAIR
+$('rm-rt').innerHTML=`${rpJobs} jobs · FYTD`;
+$('rm-exec-chart').innerHTML=stacked({labels:M,names:['In-house','SRE','Vendor'],series:[{c:'var(--navy)',vals:rp.exec.inhouse},{c:'var(--blue)',vals:rp.exec.sre},{c:'var(--blue-2)',vals:rp.exec.vendor}]});
+$('rm-exec-lg').innerHTML=`<span><span class="sw" style="background:var(--navy)"></span>In-house ${rpExecTot.inhouse}</span>
+  <span><span class="sw" style="background:var(--blue)"></span>SRE ${rpExecTot.sre}</span><span><span class="sw" style="background:var(--blue-2)"></span>Vendor ${rpExecTot.vendor}</span>`;
+$('rm-aging').innerHTML=rp.backlog.map(b=>`<div class="b${b.risk?' risk':''}"><div class="n num">${b.n}</div><div class="k">${b.k}</div></div>`).join('');
+$('rm-mttr').textContent=rp.mttr+' d';$('rm-resp').textContent=rp.resp+' d';$('rm-cpj').textContent='฿'+fmt(rpCostTot*1000/rpJobs);
+$('rm-cost-chart').innerHTML=lineChart({series:[{vals:cum(rp.cost.inhouse.map((v,i)=>v+rp.cost.sre[i]+rp.cost.vendor[i])),color:'var(--ochre)',fill:true}],labels:M,valFmt:v=>'฿'+fmt(v)+'k',min:0});
+$('rm-cost-bars').innerHTML=hbars([{n:'In-house',v:sum(rp.cost.inhouse),c:'var(--navy)'},{n:'SRE',v:sum(rp.cost.sre),c:'var(--blue)'},{n:'Vendor',v:sum(rp.cost.vendor),c:'var(--blue-2)'}],
+  Math.max(sum(rp.cost.inhouse),sum(rp.cost.sre),sum(rp.cost.vendor)),v=>'฿'+fmt(v)+'k');
+$('rm-cost-total').innerHTML=`฿${fmt(rpCostTot)}<s>k</s>`;
+const venCost=sum(rp.cost.vendor), venJobs=rpExecTot.vendor, sreJobs=rpExecTot.sre;
+
+// 05 ENERGY
+$('en-rt').innerHTML=`${enTot} incidents · FY26 vs ${en25} FY25`;
+const enTips=en.monthly.map((md,i)=>{
+  const fl=md.f.map(x=>`Fl ${x[0]}${x[1]>1?' ×'+x[1]:''}`).join(' · ');
+  const ty=md.t.map(x=>`${x[0]} ${x[1]}`).join(' · ');
+  return `<b>${M[i]} · ${en.fy26[i]} incidents</b><br>${fl}<br><span style='opacity:.75'>${ty}</span>`;});
+$('en-chart').innerHTML=compareLines({labels:M,bars:en.fy26,cumA:cum(en.fy26),cumB:cum(en.fy25),tips:enTips});
+$('en-total').innerHTML=`${enTot}`;$('en-total-cap').innerHTML=`FY25 same period ${en25} · <span class="${enTot>=en25?'dn':'up'}">${enTot>=en25?'▲':'▼'} ${Math.abs(enTot-en25)}</span>`;
+const enTMax=Math.max(...en.type.map(t=>t.n));
+$('en-type').innerHTML=`<div class="dwrap">${donut(en.type.map((t,i)=>({value:t.n,color:t.c,c0:i===0?Math.round(t.n/enTot*100)+'%':undefined,c1:i===0?'lights':undefined})))}
+  <div class="legend">${en.type.map(t=>`<div><span class="sw" style="background:${t.c}"></span>${t.t} <b>${t.n}</b></div>`).join('')}</div></div>`;
+$('en-status').innerHTML=`<i data-w="${Math.round(en.closed/enTot*100)}" style="background:var(--ok)">Closed ${en.closed}</i>${en.pending?`<i data-w="${Math.round(en.pending/enTot*100)}" style="background:var(--warn)">${en.pending}</i>`:''}`;
+$('en-status-lg').innerHTML=`<span><span class="sw" style="background:var(--ok)"></span>Closed</span><span><span class="sw" style="background:var(--warn)"></span>Pending</span>`;
+$('en-floor').innerHTML=en.floor.map((f,i)=>`<div data-tip="Floor ${f.f}: <b>${f.n}</b> incidents" data-drill="enfloor:${f.f}" style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+  <span style="width:50px;font-size:11.5px;color:var(--ink-2);flex:none">Fl. ${f.f}</span>
+  <div style="flex:1;height:9px;background:var(--rule-2)"><i data-w="${Math.round(f.n/enFloorMax*100)}" style="display:block;height:100%;width:0;background:${i===0?'var(--alert)':i<3?'var(--amber)':'var(--blue)'};transition:width .9s cubic-bezier(.19,1,.22,1)"></i></div>
+  <span class="num" style="width:26px;text-align:right;font-size:11.5px;font-weight:600;color:var(--ink);flex:none">${f.n}</span></div>`).join('');
+
+// 06 RENOVATION
+$('reno-rt').innerHTML=`${reno.length} projects · avg ${renoAvg}%`;
+const inProg=reno.filter(r=>r.st==='In Progress').length, complete=reno.filter(r=>r.st==='Complete').length;
+$('reno-donut').innerHTML=donut([{value:complete,color:'var(--ok)',c0:renoAvg+'%',c1:'avg'},{value:inProg,color:'var(--blue)'}]);
+$('reno-legend').innerHTML=`<div><span class="sw" style="background:var(--ok)"></span>Complete <b>${complete}</b></div>
+  <div><span class="sw" style="background:var(--blue)"></span>In Progress <b>${inProg}</b></div>`;
+$('reno-avg').innerHTML=`${renoAvg}<s>%</s>`;
+const moves=[...reno].sort((a,b)=>new Date(a.move)-new Date(b.move));
+$('reno-move').innerHTML=`<tbody>${moves.map(r=>`<tr><td class="k">${r.n.split(' — ')[0]}</td><td class="r">${r.move}</td></tr>`).join('')}</tbody>`;
+$('reno-list').innerHTML=reno.map((r,ri)=>`<div class="pr" data-drill="reno:${ri}"><div class="h"><span class="nm">${r.n}</span>
+  <span class="pill ${r.rlv}">${r.risk}</span></div>
+  <div class="mv" style="margin-bottom:7px">${r.pc}% complete · <span class="pill ${r.lv==='mut'?'mut':r.lv}" style="padding:1px 6px">${r.st}</span> · move-in <b>${r.move}</b></div>
+  <div class="tt"><i data-w="${r.pc}" style="background:${C[r.lv==='mut'?'mut':r.lv]}"></i></div></div>`).join('');
+$('reno-adhoc-chart').innerHTML=lineChart({series:[{vals:cum(ah.counts),color:'var(--ochre)',fill:true}],labels:M,valFmt:v=>v,min:0});
+$('reno-adhoc').innerHTML=`<thead><tr><th>Date</th><th>Fl.</th><th>Item</th><th>Status</th></tr></thead>
+  <tbody>${ah.items.map(a=>`<tr><td>${a.d}</td><td class="k">${a.f}</td><td>${a.it}</td><td><span class="pill ${a.lv}">${a.st}</span></td></tr>`).join('')}</tbody>`;
+
+$('foot-gen').textContent='Generated '+new Date().toISOString().slice(0,10);
+
+// animate
+function go(){
+  document.querySelectorAll('[data-w]').forEach(i=>i.style.width=i.getAttribute('data-w')+'%');
+  document.querySelectorAll('.gbar').forEach(b=>{b.setAttribute('y',b.dataset.y);b.setAttribute('height',b.dataset.h);b.style.transition='y 1s cubic-bezier(.19,1,.22,1),height 1s cubic-bezier(.19,1,.22,1)';});
+  document.querySelectorAll('.gline').forEach(l=>{l.style.transition='stroke-dashoffset 1.3s ease-out';l.setAttribute('stroke-dashoffset','0');});
+  document.querySelectorAll('.gdot').forEach((d,i)=>setTimeout(()=>{d.style.transition='opacity .3s';d.setAttribute('opacity','1');},400+i*40));
+}
+if(matchMedia('(prefers-reduced-motion:reduce)').matches){
+  document.querySelectorAll('[data-w]').forEach(i=>{i.style.transition='none';i.style.width=i.getAttribute('data-w')+'%';});
+  document.querySelectorAll('.gbar').forEach(b=>{b.setAttribute('y',b.dataset.y);b.setAttribute('height',b.dataset.h);});
+  document.querySelectorAll('.gline').forEach(l=>l.setAttribute('stroke-dashoffset','0'));
+  document.querySelectorAll('.gdot').forEach(d=>d.setAttribute('opacity','1'));
+}else requestAnimationFrame(()=>requestAnimationFrame(go));
+/* =========================== INTERACTIVITY =========================== */
+(function(){
+  const secs=[...document.querySelectorAll('.sec')];
+  secs.forEach((s,i)=>s.id='s'+(i+1));
+  const shortName=t=>t.replace(/—.*/,'').replace(/<.*/,'').trim();
+  const nav=document.getElementById('nav');
+  nav.innerHTML=`<a data-go="top"><b>·</b>Summary</a>`+secs.map((s,i)=>{
+    const h=s.querySelector('h2'); const nm=shortName(h.textContent);
+    return `<a data-go="s${i+1}"><b>0${i+1}</b>${nm}</a>`;}).join('');
+  nav.addEventListener('click',e=>{const a=e.target.closest('[data-go]');if(!a)return;
+    const id=a.dataset.go; const el=id==='top'?document.body:document.getElementById(id);
+    const y=id==='top'?0:el.getBoundingClientRect().top+scrollY-64; scrollTo({top:y,behavior:'smooth'});});
+  // scroll-spy
+  const links=[...nav.querySelectorAll('a')];
+  const spy=()=>{let cur=0; secs.forEach((s,i)=>{if(s.getBoundingClientRect().top<120)cur=i+1;});
+    links.forEach(l=>l.classList.remove('on')); links[cur]&&links[cur].classList.add('on');};
+  addEventListener('scroll',spy,{passive:true}); spy();
+
+  // tooltip
+  const tt=document.getElementById('tt');
+  addEventListener('mousemove',e=>{const el=e.target.closest('[data-tip]');
+    if(el){tt.innerHTML=el.dataset.tip; tt.style.opacity='1';
+      let x=e.clientX+14,y=e.clientY+14; const r=tt.getBoundingClientRect();
+      if(x+r.width>innerWidth-8)x=e.clientX-r.width-14; if(y+r.height>innerHeight-8)y=e.clientY-r.height-14;
+      tt.style.left=x+'px'; tt.style.top=y+'px';}
+    else tt.style.opacity='0';});
+
+  // KPI cards -> jump to section (order matches sections 1..6)
+  document.querySelectorAll('#readouts .ro').forEach((c,i)=>{c.addEventListener('click',()=>{
+    const el=document.getElementById('s'+(i+1)); if(!el)return;
+    scrollTo({top:el.getBoundingClientRect().top+scrollY-64,behavior:'smooth'});
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');});});
+
+  // drill-down modal
+  const modal=document.getElementById('modal'), mbody=document.getElementById('mbody');
+  window.closeDrill=()=>modal.classList.remove('on');
+  modal.addEventListener('click',e=>{if(e.target===modal)closeDrill();});
+  addEventListener('keydown',e=>{if(e.key==='Escape')closeDrill();});
+  const mkrows=arr=>arr.map(x=>`<div class="mrow"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
+  function drill(key){
+    const [t,v]=key.split(':'); let html='';
+    if(t==='enfloor'){const f=DATA.energy.floor.find(x=>x.f===v);
+      html=`<h4>Floor ${v} — Irregularities</h4><div class="msub">FY2026 · after-hours</div>
+        ${mkrows([['Incidents this FY',f.n],['Share of total',Math.round(f.n/sum(DATA.energy.fy26)*100)+'%'],
+        ['Note', v==='16'?'Repeat offender (FY25 & FY26)':'—']])}`;}
+    else if(t==='reno'){const r=DATA.reno[+v];
+      html=`<h4>${r.n}</h4><div class="msub">Renovation project</div>
+        ${mkrows([['% complete',r.pc+'%'],['Status',r.st],['Schedule risk',r.risk],['Move-in',r.move]])}`;}
+    else if(t==='pmabn'){
+      html=`<h4>Emergency Light — Follow-up</h4><div class="msub">7 abnormal · 3 pending inspection</div>
+        ${DATA.pm.follow.filter(x=>x.item==='Emergency Light').map(x=>
+        `<div class="mrow"><span><b>${x.loc}</b> · ${x.issue}</span><span style="color:var(--${x.lv})">${x.status}</span></div>`).join('')}`;}
+    if(html){mbody.innerHTML=html; modal.classList.add('on');}
+  }
+  document.addEventListener('click',e=>{const el=e.target.closest('[data-drill]'); if(el)drill(el.dataset.drill);});
+})();
+</script>
+</body>
+</html>
